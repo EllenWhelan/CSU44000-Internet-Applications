@@ -8,4 +8,4 @@ For submission purposes, it is completely unstyled.
 
 Documentation on the API can be found [here](https://openweathermap.org/api). 
 
-The full assignment brief can be found [here](). 
+The full assignment brief can be found [here](https://github.com/EllenWhelan/CSU44000-Internet-Applications/blob/master/Assignment1/AssignmentBrief.pdf). 
