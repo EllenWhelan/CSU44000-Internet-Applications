@@ -1,0 +1,116 @@
+<!-----HTML for client web page -------->
+<!DOCTYPE html>
+<html>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>   
+    <div id="app">
+        <h1> CSU44000 - Movie Details</h1>
+        <div>
+            <!--create button-->
+            <button v-on:click="createTable">Create Table</button>
+            <!--delete button-->
+            <button v-on:click="deleteTable">Delete Table</button>
+            <!--output to user-->
+            <div v-if="succesfulCreate">Table Created</div>
+            <div v-if="failedCreate">Table already exists!</div>
+            <div v-if="succesfulDelete">Table Deleted</div>
+            <div v-if="failedDelete">Table failed to delete</div>
+        </div>
+        <br/><br/>
+        <!--query table form and button-->
+        <form @submit.prevent="queryTable">Look up a Movie <br/>
+            <label> Movie Title
+                <input type="text" v-model="userTitle">
+            </label>
+            <br/><br/>
+            <label> Movie Year
+                <input type="text" v-model="userYear">
+            </label>
+            <button v-on:submit.prevent>Look Up</button>
+        </form>
+        <br/>
+        <!--results of query is succesful-->
+        <div v-if="movieResults.length >0">
+            <table border=1>
+                <tr>
+                    <th>Movie Name</th>
+                    <th>Release Date</th>
+                    <th>Rank</th>
+                </tr>
+                <tr v-for="movie in movieResults" :key="movie.title">
+                    <td>{{movie.title}}</td>
+                    <td>{{movie.release_date.split('T')[0]}}</td> <!--just print out date of release, ignore timestamp-->
+                    <td>{{movie.rank}}</td>
+                </tr> 
+            </table>
+            <br/>
+        </div>
+        <!-- result of the query is unsuccesful-->
+        <div v-if="movieResults==0 && queryDisplay">Sorry, I don't know that movie!</div>
+    </div>
+    
+<!-------Vue js script for handling client - interacts with server------->
+    <script>
+        var app= new Vue({
+            el: '#app', 
+            data:{
+			 //booleans to keep track of state of webpage (i.e. which message to display)
+                succesfulCreate: false,
+                succesfulDelete:false,
+                failedCreate:false,
+                failedDelete:false, 
+                queryDisplay:false, //boolean over whether active query
+                userYear: null,  //store user input for queries
+                userTitle:null,
+                movieResults: [], //results of query to table 
+            }, 
+            methods:{
+                 //function to create a table in dynamodb using data from s3 bucket 
+                async createTable(){
+                    //set all state booleans to false
+                    this.succesfulCreate = false
+                    this.succesfulDelete=false 
+                    this.failedCreate=false  
+                    this.failedDelete=false 
+                    this.queryDisplay=false
+                    //ask server to carry out create 
+                    const response = await fetch("/createTable") //returns promise that resolve to reponse object
+                    if(response.ok){this.succesfulCreate=true} //table succesfully created 
+                    else{this.failedCreate=true}    //table failed to create - user has already created table 
+                        
+                }, 
+
+                //function to delete table 
+                async deleteTable(){
+                    //set all state booleans to false
+                    this.succesfulCreate = false
+                    this.succesfulDelete=false 
+                    this.failedCreate=false  
+                    this.failedDelete=false 
+                    this.queryDisplay=false
+                    //ask server to carry out delete 
+                    const response = await fetch ("/deleteTable")
+                    if(response.ok) {this.succesfulDelete=true} 
+                    else{this.failedDelete=true} //table failed to delete
+                },
+
+                //function to take user input and query table for movie information
+                async queryTable(){
+                    //set all state booleans to false
+                    this.succesfulCreate = false
+                    this.succesfulDelete=false 
+                    this.failedCreate=false  
+                    this.failedDelete=false
+                    //ask server to carry out query 
+                    const response = await fetch (`/getMovies?title=${this.userTitle}&year=${this.userYear}`) 
+                    if(response.ok){
+					// reads response stream and returns promise that resolves with the result of parsing the body text as JSON
+                        const temp = await response.json(); 
+                        this.movieResults = temp  
+                        this.queryDisplay=true
+                    } 
+                                       
+                }, 
+            } //end methods section
+        }) //end app section
+    </script>
+</html>

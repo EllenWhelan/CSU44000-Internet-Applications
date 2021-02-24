@@ -1,0 +1,53 @@
+let thisInvocation;
+let lastInvocation;
+let timeSinceLast;
+let totalInvocationsOnThisContainer;
+let averageGapBetweenInvocations;
+
+
+exports.handler = async (event) =>{
+	thisInvocation = new Date();
+	
+	//reset case 
+	if(event.queryStringParameters && event.queryStringParameters.cmd == "RESET"){
+		lastInvocation=0;
+		totalInvocationsOnThisContainer=0;
+		averageGapBetweenInvocations=0;
+		const response = {
+			statusCode: 200, 
+			body: JSON.stringify({
+			"ThisInvocation": thisInvocation,
+			})
+		};
+		return response; 
+	}
+	else{
+		//first invocation on this container case
+		if(!lastInvocation){
+			timeSinceLast = 0;
+			lastInvocation=thisInvocation;
+			averageGapBetweenInvocations=0;
+			totalInvocationsOnThisContainer=1;
+		}
+		else{//not first invocation on container case
+			timeSinceLast = thisInvocation-lastInvocation;
+			lastInvocation=thisInvocation;
+			averageGapBetweenInvocations = (averageGapBetweenInvocations + timeSinceLast) /2 ;
+			totalInvocationsOnThisContainer++; 
+		}
+	
+		const reponse = {
+			statusCode:200, 
+			body: JSON.stringify({
+				"ThisInvocation": thisInvocation, 
+				"TimeSinceLast": timeSinceLast, 
+				"TotalInvocationsOnThisContainer": totalInvocationsOnThisContainer,
+				"AverageGapBetweenInvocations":averageGapBetweenInvocations	
+			})
+		};
+		return reponse;
+	}
+
+};
+
+
